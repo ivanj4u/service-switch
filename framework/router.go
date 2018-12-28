@@ -107,10 +107,11 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		endPoint = data[0]
 	}
 
-	isParam := restUrl.Routing_field == "param"
+	isParam := restUrl.Routing_field == "flag"
 	key := param[restUrl.Routing_field]
 	isTransaction := restUrl.Is_transaction == "1"
-	if isTransaction && responseData.ReffSwitching == "" {
+	isReffSwitching := restUrl.Is_reffswitching == "1"
+	if isReffSwitching && responseData.ReffSwitching == "" {
 		reffSwitching := responseData.ClientId + strconv.Itoa(util.GetCurrentTimeMilis())
 		responseData.ReffSwitching = reffSwitching
 	}
@@ -212,7 +213,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		writeResponse(w, responseService)
 		return
 	}
-	log.Println("Request Body :", responseService)
+	log.Println("Response Body :", responseService)
 
 	writeResponse(w, responseService)
 }

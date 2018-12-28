@@ -46,7 +46,7 @@ func loadParameter() (map[string] string, error) {
 func loadUrl() (map[string]restUrl, error) {
 	h := map[string]restUrl{}
 
-	rows, err := database.DBCon.Query("SELECT a.url_id, a.url_name, a.routing_field, a.is_transaction, a.is_existing FROM tbl_rest_url a")
+	rows, err := database.DBCon.Query("SELECT a.url_id, a.url_name, a.routing_field, a.is_transaction, a.is_reff_switching, a.is_existing FROM tbl_rest_url a")
 	if err != nil {
 		log.Panicln(err)
 		return nil, errors.New(constant.ERR_DATABASE)
@@ -56,7 +56,7 @@ func loadUrl() (map[string]restUrl, error) {
 
 	for rows.Next() {
 		var r restUrl
-		if err := rows.Scan(&r.Url_id, &r.Url_name, &r.Routing_field, &r.Is_transaction, &r.Is_Existing); err != nil {
+		if err := rows.Scan(&r.Url_id, &r.Url_name, &r.Routing_field, &r.Is_transaction, &r.Is_reffswitching, &r.Is_Existing); err != nil {
 			log.Panicln(err)
 			return nil, errors.New(constant.ERR_ROWS_PARSING)
 		}
