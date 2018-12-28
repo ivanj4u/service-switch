@@ -1,21 +1,35 @@
 package framework
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"bytes"
-	"io/ioutil"
-	"encoding/json"
 
 	"github.com/ivanj4u/service-switch/constant"
 	"github.com/ivanj4u/service-switch/dto"
 )
 
-func postCore(req dto.Json, url string) dto.Json {
+func post(req dto.Json, path string, key string, isParam bool, isTransaction bool) dto.Json {
+	log.Println("Start Services Post ")
+	var url string
 	var res dto.Json
-	log.Println("URL:>", url)
 
-	req.RequestType = ""
+	if isParam {
+		url = routingByFlag(key, isTransaction)
+	} else {
+		url = routingByBranch(key, isTransaction)
+	}
+
+	if url == "" {
+		return generalError(constant.MSG_ERR_PARAM_NOT_FOUND + " " + key)
+	}
+
+	url = url + path
+
+	log.Println("URL:>", url)
 
 	r, err := json.Marshal(req)
 	if err != nil {
@@ -51,5 +65,62 @@ func postCore(req dto.Json, url string) dto.Json {
 		return generalError(constant.MSG_ERR_JSON_PARSING_RES)
 	}
 
+	log.Println("End Services Post ")
 	return res
+}
+
+func postOld(req dto.JsonOld, path string, key string, isParam bool, isTransaction bool) (dto.JsonOld, error) {
+	log.Println("Start Services Post ")
+	var url string
+	var res dto.JsonOld
+
+	if isParam {
+		url = routingByFlag(key, isTransaction)
+	} else {
+		url = routingByBranch(key, isTransaction)
+	}
+
+	if url == "" {
+		return res, errors.New(constant.MSG_ERR_PARAM_NOT_FOUND + " " + key)
+	}
+	url = url + path
+
+	log.Println("URL:>", url)
+
+	r, err := json.Marshal(req)
+	if err != nil {
+		log.Println(err)
+		return res, errors.New(constant.MSG_ERR_JSON_PARSING_REQ)
+	}
+
+	log.Println("Request Body Core :", string(r))
+
+	coreRequest, err := http.NewRequest("POST", url, bytes.NewBuffer(r))
+	coreRequest.Header.Set("Content-Type", "application/json")
+
+	httpClient := &http.Client{}
+	resp, err := httpClient.Do(coreRequest)
+	if err != nil {
+		log.Println(err)
+		return res, errors.New(constant.MSG_ERR_POST_HTTP)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return res, errors.New(constant.MSG_ERR_RES_BODY)
+	}
+
+	log.Println("Response Body Core :", string(body))
+
+	err = json.Unmarshal(body, &res)
+	if err != nil {
+		log.Println(err)
+		return res, errors.New(constant.MSG_ERR_JSON_PARSING_RES)
+	}
+
+	log.Println("End Services Post ")
+	return res, nil
 }

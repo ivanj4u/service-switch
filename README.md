@@ -26,10 +26,10 @@ cd $GOPATH/src/github.com/go-sql-driver/mysql
 go install
 ```
 
-Get and install Scheduler
+Get and install MongoDB Driver
 ```
-go get github.com/jasonlvhit/gocron
-cd $GOPATH/src/github.com/jasonlvhit/gocron
+go get github.com/globalsign/mgo
+cd $GOPATH/src/github.com/globalsign/mgo
 go install
 ```
 
