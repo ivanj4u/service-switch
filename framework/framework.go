@@ -1,16 +1,15 @@
 package framework
 
-import (
-	"github.com/ivanj4u/service-switch/database"
-)
-
 func Init() {
 	// Import Properties
 	initProperties()
 
-	// Open Database
-	database.DBCon = openDatabaseConnection()
-	database.MBCon = openMongoDBConnection()
+	// Open Database Connection
+	DBCon = openDatabaseConnection()
+
+	// Open MongoDB Connection
+	initMongoDBConnection()
+	defer closeMongoDBConnection()
 
 	// Loader
 	load()

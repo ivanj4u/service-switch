@@ -12,7 +12,7 @@ import (
 	"github.com/ivanj4u/service-switch/dto"
 )
 
-func post(req dto.Json, path string, key string, isParam bool, isTransaction bool) dto.Json {
+func post(req map[string] object, path string, key string, isParam bool, isTransaction bool) dto.Json {
 	log.Println("Start Services Post ")
 	var url string
 	var res dto.Json
@@ -69,12 +69,12 @@ func post(req dto.Json, path string, key string, isParam bool, isTransaction boo
 	return res
 }
 
-func postOld(req dto.JsonOld, path string, key string, isParam bool, isTransaction bool) (dto.JsonOld, error) {
+func postOld(req map[string] object, path string, key string, isFlag bool, isTransaction bool) (map[string] object, error) {
 	log.Println("Start Services Post ")
 	var url string
-	var res dto.JsonOld
+	var res map[string] object
 
-	if isParam {
+	if isFlag {
 		url = routingByFlag(key, isTransaction)
 	} else {
 		url = routingByBranch(key, isTransaction)

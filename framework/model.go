@@ -1,16 +1,21 @@
 package framework
 
+type object interface{}
+
 type restUrl struct {
-	Url_id int
-	Is_transaction string
-	Is_reffswitching string
-	Routing_field string
-	Url_name string
-	Is_Existing string
+	urlId           string
+	isTransaction   string
+	isReffSwitching string
+	amountField     string
+	keyField        string
+	routingField    string
+	requestType     string
+	urlName         string
+	isExisting      string
 }
 
 type restField struct {
-	Field string
-	Min_length int
-	Max_length int
+	fieldName string
+	minLength int
+	maxLength int
 }

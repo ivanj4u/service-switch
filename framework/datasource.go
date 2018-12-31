@@ -7,6 +7,11 @@ import (
 	"github.com/globalsign/mgo"
 )
 
+var (
+	DBCon        *sql.DB
+	mongoSession *mgo.Session
+)
+
 func openDatabaseConnection() (*sql.DB) {
 	log.Println("Start Open Connection to Database")
 	var db *sql.DB
@@ -36,23 +41,28 @@ func openDatabaseConnection() (*sql.DB) {
 	return db
 }
 
-func openMongoDBConnection() (*mgo.Database) {
+func initMongoDBConnection() {
 	log.Println("Start Open Connection to MongoDB")
 
 	url := databaseProperties["mongo.url"]
 	port := databaseProperties["mongo.port"]
-	dbname := databaseProperties["mongo.dbname"]
 
 	mongoDial := "mongodb://"+url+":"+port
 	log.Println("mongoDial :", mongoDial)
 
-	session, err := mgo.Dial(mongoDial)
-	if err != nil {
-		log.Fatal(err)
+	if mongoSession == nil {
+		session, err := mgo.Dial(mongoDial)
+		if err != nil {
+			log.Fatal(err)
+		}
+		session.SetMode(mgo.Monotonic, true)
+		mongoSession = session
 	}
-
-	db := session.DB(dbname)
-
 	log.Println("Success Open Connection to MongoDB")
-	return db
+	return
+}
+
+func closeMongoDBConnection() {
+	mongoSession.Close()
+	return
 }
