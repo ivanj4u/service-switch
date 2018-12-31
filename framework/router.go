@@ -63,7 +63,12 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if restUrl.requestType != "" && restUrl.requestType != "INQUIRY" {
+	requestType := ""
+	if restUrl.requestType.Valid {
+		requestType = restUrl.requestType.String
+	}
+
+	if requestType != "" && requestType != "INQUIRY" {
 		valid = validatePaymentMethod(responseData["paymentMethod"])
 
 		if !valid {
@@ -86,7 +91,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	jenisTransaksi, endPoint := getJenisTransaksi(path)
 
-	valid = validateRole(responseData["clientId"].(string), jenisTransaksi, restUrl.requestType)
+	valid = validateRole(responseData["clientId"].(string), jenisTransaksi, requestType)
 	if !valid {
 		responseService = caNotRegistered(constant.MSG_ERR_CLIENT_ROLE_UNAUTHORIZE)
 		writeResponse(w, responseService)
@@ -109,7 +114,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	isFlag := restUrl.routingField == "flag"
 
 	// Tabungan OPEN
-	if productCode == "62" && restUrl.requestType == constant.REQ_INQUIRY && responseData["jenisTransaksi"] == "OP" {
+	if productCode == constant.PRODUCT_CODE_TABUNGAN && restUrl.requestType.String == constant.REQ_INQUIRY && responseData["jenisTransaksi"] == "OP" {
 		key = responseData["flag"].(string)
 		isFlag = true
 	} else {
@@ -117,24 +122,32 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	isTransaction := restUrl.isTransaction == "1"
-	isReffSwitching := restUrl.isReffSwitching == "1"
-	if isReffSwitching && responseData["reffSwitching"] == "" {
+
+	isReffSwitching := false
+	if restUrl.isReffSwitching.Valid && restUrl.isReffSwitching.String == "1" {
+		isReffSwitching = true
+	}
+
+	if isReffSwitching && (responseData["reffSwitching"] == nil || responseData["reffSwitching"].(string) == "") {
 		reffSwitching := responseData["clientId"].(string) + strconv.Itoa(util.GetCurrentTimeMilis())
 		responseData["reffSwitching"] = reffSwitching
 	}
 
-	// Create Old Request
-	if restUrl.isExisting == "1" || (jenisTransaksi == constant.TABUNGAN && restUrl.requestType == constant.REQ_INQUIRY) {
-		old, err := createOldJson(jenisTransaksi, responseData)
+	if requestType != "" && requestType != constant.REQ_CREATE && requestType != constant.REQ_INQUIRY {
+		err = validateLog(restUrl, responseData)
 		if err != nil {
-			log.Println(err.Error())
-			responseService = generalError(err.Error())
+			responseService = invalidTransaction(err.Error())
 			writeResponse(w, responseService)
 			return
 		}
+	}
+
+	// Create Old Request
+	if (restUrl.isExisting.Valid && restUrl.isExisting.String == "1") || (jenisTransaksi == constant.TABUNGAN && requestType == constant.REQ_INQUIRY) {
+		old:= createOldJson(jenisTransaksi, responseData)
+
 		old, err = postOld(old, path, key, isFlag, isTransaction)
 		if err != nil {
-			log.Println(err.Error())
 			responseService = generalError(err.Error())
 			writeResponse(w, responseService)
 			return
@@ -155,7 +168,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Create Log
-	err = saveLog(responseData)
+	err = saveLog(responseData, requestType)
 	if err != nil {
 		responseService = generalError(err.Error())
 		writeResponse(w, responseService)

@@ -10,7 +10,6 @@ import (
 
 	"github.com/ivanj4u/service-switch/constant"
 	"strings"
-	"log"
 )
 
 func validateField(urlName string, req map[string] object, isInquiry bool) (bool, restUrl, error) {
@@ -53,8 +52,6 @@ func validateRole(clientId, role, requestType string) bool {
 
 func validateProduct(channelId, clientId, productCode string) bool {
 	key := channelId + clientId + productCode
-	log.Println("Key :", key)
-	log.Println("Value :", CAProduct[key])
 	return CAProduct[key]
 }
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/ivanj4u/service-switch/constant"
+	"fmt"
 )
 
 var (
@@ -13,6 +14,7 @@ var (
 	FieldLoader map[string] []restField
 	CARole map[string] map[string] bool
 	CAProduct map[string] bool
+	SurchargeLoader map[string] string
 )
 
 func load() {
@@ -21,6 +23,7 @@ func load() {
 	FieldLoader, _ = loadField()
 	CARole, _ = loadCARole()
 	CAProduct, _ = loadCAProduct()
+	SurchargeLoader, _ = loadSurcharge()
 }
 
 func loadParameter() (map[string] string, error) {
@@ -49,7 +52,7 @@ func loadParameter() (map[string] string, error) {
 func loadUrl() (map[string]restUrl, error) {
 	h := map[string]restUrl{}
 
-	rows, err := DBCon.Query("SELECT a.url_id, a.url_name, a.amount_field, a.key_field, a.routing_field, a.is_transaction, a.is_reff_switching, a.request_type, a.is_existing FROM tbl_rest_url a")
+	rows, err := DBCon.Query("SELECT a.url_id, a.url_name, a.amount_req_field, a.amount_res_field, a.key_field, a.routing_field, a.is_transaction, a.is_reff_switching, a.request_type, a.is_existing FROM tbl_rest_url a")
 	if err != nil {
 		log.Panicln(err)
 		return nil, errors.New(constant.ERR_DATABASE)
@@ -59,7 +62,7 @@ func loadUrl() (map[string]restUrl, error) {
 
 	for rows.Next() {
 		var r restUrl
-		if err := rows.Scan(&r.urlId, &r.urlName, &r.amountField, &r.keyField, &r.routingField, &r.isTransaction, &r.isReffSwitching, &r.requestType, &r.isExisting); err != nil {
+		if err := rows.Scan(&r.urlId, &r.urlName, &r.amountReqField, &r.amountResField, &r.keyField, &r.routingField, &r.isTransaction, &r.isReffSwitching, &r.requestType, &r.isExisting); err != nil {
 			log.Panicln(err)
 			return nil, errors.New(constant.ERR_ROWS_PARSING)
 		}
@@ -149,6 +152,41 @@ func loadCAProduct() (map[string] bool, error) {
 			return nil, errors.New(constant.ERR_ROWS_PARSING)
 		}
 		h[channelId + clientId + productCode] = true
+	}
+
+	return h, nil
+}
+
+func loadSurcharge() (map[string] string, error) {
+	h := map[string] string{}
+
+	rows, err := DBCon.Query("SELECT a.channel_id, a.client_id, a.jenis_transaksi, a.product_code, a.payment_method, a.kode_bank, a.jumlah FROM tbl_rest_surcharge a")
+	if err != nil {
+		log.Panicln(err)
+		return nil, errors.New(constant.ERR_DATABASE)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var kodeBank string
+		var surcharge restSurcharge
+		if err := rows.Scan(&surcharge.channelId, &surcharge.clientId, &surcharge.jenisTransaksi, &surcharge.productCode, &surcharge.paymentMethod, &surcharge.kodeBank, &surcharge.amount); err != nil {
+			log.Panicln(err)
+			return nil, errors.New(constant.ERR_ROWS_PARSING)
+		}
+
+		if !surcharge.paymentMethod.Valid {
+			continue
+		}
+		if !surcharge.kodeBank.Valid {
+			kodeBank = ""
+		} else {
+			kodeBank = surcharge.kodeBank.String
+		}
+
+		key := surcharge.channelId + surcharge.clientId + surcharge.jenisTransaksi + surcharge.productCode + surcharge.paymentMethod.String + kodeBank
+		h[key] = fmt.Sprintf("%.0f", surcharge.amount)
 	}
 
 	return h, nil

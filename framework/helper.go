@@ -33,7 +33,7 @@ func getProductCode(tipeTransaksi string, req map[string] object) string {
 	return productCode
 }
 
-func createOldJson(jenisTransaksi string, req map[string] object) (map[string] object, error) {
+func createOldJson(jenisTransaksi string, req map[string] object) (map[string] object) {
 	old := map[string] object {}
 	var kewajiban float64
 
@@ -58,7 +58,7 @@ func createOldJson(jenisTransaksi string, req map[string] object) (map[string] o
 	if req["kodeBankPembayar"] != nil {
 		old["kodeBankPembayar"] = req["kodeBankPembayar"]
 	}
-	if req["reffIdSwitching"] != nil {
+	if req["reffSwitching"] != nil {
 		old["reffIdSwitching"] = req["reffSwitching"]
 	}
 
@@ -122,7 +122,7 @@ func createOldJson(jenisTransaksi string, req map[string] object) (map[string] o
 			old["kewajiban"] = kewajiban
 		}
 	}
-	return old, nil
+	return old
 }
 
 func parseOldResponse(jenisTransaksi string, old, responseData map[string] object) map[string] object {
