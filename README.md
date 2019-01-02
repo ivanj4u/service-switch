@@ -7,7 +7,7 @@ This application used for routing all request to the core services
 
 * [go](https://golang.org/doc/) - Core Framework
 * [go-sql-driver](https://github.com/go-sql-driver/mysql) - MySQL Driver
-* [go-sql-driver](https://github.com/globalsign/mgo) - MongoDB Driver
+* [go-mongodb](https://github.com/globalsign/mgo) - MongoDB Driver
 * [natefinch-lumberjack](https://github.com/natefinch/lumberjack) - Logger
 
 

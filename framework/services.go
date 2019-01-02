@@ -7,6 +7,7 @@ import (
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/ivanj4u/service-switch/constant"
+	"strconv"
 )
 
 func saveLog(data map[string] object, requestType string) (error) {
@@ -31,7 +32,7 @@ func saveLog(data map[string] object, requestType string) (error) {
 
 }
 
-func validateLog(url restUrl, req map[string] object) (error) {
+func validateLog(url restUrl, req map[string] object, productCode string) (error) {
 	dbname := databaseProperties["mongo.dbname"]
 
 	session := mongoSession.Clone()
@@ -87,8 +88,27 @@ func validateLog(url restUrl, req map[string] object) (error) {
 		return errors.New("Key ReffSwitching tidak sesuai")
 	}
 
-	if req[amountReq] != result[amountRes] {
-		log.Println(amountRes, "ReffSwitching tidak sesuai", req[amountReq], result[amountRes])
+	// Validating Amount with Surcharges (Khusus paymentMethod BANK)
+	amount := req[amountReq].(string)
+
+	paymentMethod := req["paymentMethod"]
+	if paymentMethod != nil && paymentMethod.(string) == "BANK" {
+		key := req["channelId"].(string) + clientId + jenisTransaksi + productCode + paymentMethod.(string) + req["kodeBankPembayar"].(string)
+		surcharge := SurchargeLoader[key]
+
+		if surcharge != "" {
+			charge, _ := strconv.Atoi(surcharge)
+			value, _ := strconv.Atoi(amount)
+
+			value = value - charge
+			amount = strconv.Itoa(value)
+		} else {
+			log.Println("Surcharge :", key, "not found")
+			return errors.New("Surcharge not found")
+		}
+	}
+	if amount != result[amountRes] {
+		log.Println(amountRes, "ReffSwitching tidak sesuai", amount, result[amountRes])
 		return errors.New("Amount ReffSwitching tidak sesuai")
 	}
 

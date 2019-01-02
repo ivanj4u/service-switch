@@ -134,7 +134,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if requestType != "" && requestType != constant.REQ_CREATE && requestType != constant.REQ_INQUIRY {
-		err = validateLog(restUrl, responseData)
+		err = validateLog(restUrl, responseData, productCode)
 		if err != nil {
 			responseService = invalidTransaction(err.Error())
 			writeResponse(w, responseService)
