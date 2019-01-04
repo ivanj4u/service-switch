@@ -95,7 +95,7 @@ func postOld(req map[string] object, path string, key string, isFlag bool, isTra
 
 	log.Println("Request Body Core :", string(r))
 
-	coreRequest, err := http.NewRequest("POST", url, bytes.NewBuffer(r))
+	coreRequest, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(r))
 	coreRequest.Header.Set("Content-Type", "application/json")
 
 	httpClient := &http.Client{}
@@ -123,4 +123,24 @@ func postOld(req map[string] object, path string, key string, isFlag bool, isTra
 
 	log.Println("End Services Post ")
 	return res, nil
+}
+
+func checkToken(token string) error {
+	urlCheckToken := applicationProperties["server.oauth.url"] + "/" + "check_token" + "?token=" + token
+
+	log.Println(urlCheckToken)
+
+	req, _ := http.NewRequest(http.MethodPost, urlCheckToken, nil)
+	req.Header.Add("Authorization", "Basic YXBsaWthc2lqczphcGxpa2FzaTEyMw==")
+	httpClient := &http.Client{}
+	resp, err := httpClient.Do(req)
+
+	if err != nil {
+		log.Println(err)
+		return errors.New(constant.MSG_ERR_POST_HTTP + " OAuth Server")
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("Unauthorize - " + resp.Status)
+	}
+	return nil
 }

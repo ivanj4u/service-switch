@@ -33,8 +33,6 @@ const (
 	REQ_CREATE = "CREATE"
 	REQ_INQUIRY = "INQUIRY"
 
-	FIELD_KEY = "fieldKey"
-	FIELD_AMOUNT = "fieldAmount"
 )
 
 // RESPONSE CODE AND DESCRIPTION

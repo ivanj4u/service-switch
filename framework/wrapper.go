@@ -2,12 +2,13 @@ package framework
 
 import (
 	"net/http"
+	"strings"
 )
 
 func getOnly(handler CustomHandler) CustomHandler {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
+		if r.Method == http.MethodGet {
 			handler(w, r)
 			return
 		}
@@ -18,7 +19,17 @@ func getOnly(handler CustomHandler) CustomHandler {
 func postOnly(handler CustomHandler) CustomHandler  {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "POST" {
+		if r.Method == http.MethodPost {
+
+			reqToken := r.Header.Get("Authorization")
+			splitToken := strings.Split(reqToken, "Bearer ")
+			reqToken = splitToken[1]
+
+			err := checkToken(reqToken)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
 			handler(w, r)
 			return
 		}
